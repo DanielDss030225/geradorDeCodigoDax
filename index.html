@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador DAX Completo (4 Abas)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            padding: 20px 0;
+            margin: 0;
+            background-color: #e0f7fa;
+            border-bottom: 2px solid #00bcd4;
+        }
+        /* Estilo das Abas */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ccc;
+        }
+        .tab-button {
+            flex: 1;
+            padding: 15px 10px;
+            cursor: pointer;
+            background-color: #f0f0f0;
+            border: none;
+            border-right: 1px solid #ccc;
+            font-size: 14px; /* Reduzido para caber 4 abas */
+            font-weight: bold;
+            color: #555;
+            transition: background-color 0.3s, color 0.3s;
+            text-align: center;
+        }
+        .tab-button:last-child {
+            border-right: none;
+        }
+        .tab-button.active {
+            background-color: #0078d4; /* Cor do Power BI */
+            color: white;
+            border-bottom: 3px solid #005a9e;
+        }
+        .tab-button:hover:not(.active) {
+            background-color: #e9e9e9;
+        }
+        /* Conteúdo das Abas */
+        .tab-content {
+            padding: 20px;
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        /* Estilo dos Formulários */
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+            color: #333;
+        }
+        input[type="text"], select, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .button-group button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .generate-button {
+            background-color: #0078d4;
+            color: white;
+        }
+        .generate-button:hover {
+            background-color: #005a9e;
+        }
+        .copy-button {
+            background-color: #28a745;
+            color: white;
+        }
+        .copy-button:hover {
+            background-color: #1e7e34;
+        }
+        /* Área de Código */
+        .code-area {
+            margin-top: 20px;
+        }
+        .code-area h2 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            font-family: monospace;
+            font-size: 14px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        .instructions {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #e6f7ff;
+            border: 1px solid #91d5ff;
+            color: #0050b3;
+            border-radius: 4px;
+        }
+        .instructions ol {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin-bottom: 5px;
+        }
+        .input-group {
+            display: flex;
+            gap: 20px;
+        }
+        .input-group > div {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Gerador DAX Completo para Power BI</h1>
+
+        <div class="tabs">
+            <button class="tab-button" onclick="openTab(event, 'calendario')">PASSO 01 : CRIAR TABELA CALENDÁRIO</button>
+            <button class="tab-button" onclick="openTab(event, 'formulas')">PASSO 02: CRIAR MEDIDAS PARA A QUANTIDADE DE REGISTROS</button>
+            <button class="tab-button" onclick="openTab(event, 'produtividade')">PASSO 03: CRIAR MEDIDAS PARA CALCULAR A PRODUTIVIDADE</button>
+            <button class="tab-button" onclick="openTab(event, 'medidas')">MEDIDAS SIMPLES PARA USAR NO DIA A DIA</button>
+        </div>
+
+        <!-- Conteúdo da Aba Calendário -->
+        <div id="calendario" class="tab-content">
+            <h2>Gerador de Tabela Calendário Dinâmica</h2>
+            <div class="instructions">
+                <p>Este gerador cria a tabela <code>d_Calendario</code> que se ajusta automaticamente à data mínima e máxima da sua coluna de data. **IMPORTANTE:** Você precisa desta tabela para usar as fórmulas das outras abas.</p>
+            </div>
+
+            <label for="cal_nomeTabela">Nome da Tabela/Planilha (Ex: f_Vendas):</label>
+            <input type="text" id="cal_nomeTabela" value="f_Base_POG" placeholder="Ex: f_Vendas">
+
+            <label for="cal_nomeColuna">Nome da Coluna de Data (Ex: data_fato):</label>
+            <input type="text" id="cal_nomeColuna" value="data_fato" placeholder="Ex: Data_Pedido">
+
+            <div class="button-group">
+                <button class="generate-button" onclick="gerarCodigoCalendario()">Gerar Código DAX</button>
+                <button class="copy-button" onclick="copiarCodigo('cal_codigoDax')">Copiar Código</button>
+            </div>
+
+            <div class="code-area">
+                <h2>Código DAX Gerado:</h2>
+                <textarea id="cal_codigoDax" rows="15" readonly></textarea>
+            </div>
+        </div>
+
+        <!-- Conteúdo da Aba Medidas Simples -->
+        <div id="medidas" class="tab-content">
+            <h2>Gerador de Medidas DAX Simples</h2>
+            <div class="instructions">
+                <p><strong>Instruções:</strong> Escolha a função (Soma, Média, etc.), informe a Tabela e a Coluna. O gerador cria o código DAX básico para você.</p>
+            </div>
+
+            <label for="med_tipoMedida">1. Escolha o Tipo de Medida:</label>
+            <select id="med_tipoMedida">
+                <option value="SUM">SOMA (SUM)</option>
+                <option value="AVERAGE">MÉDIA (AVERAGE)</option>
+                <option value="COUNT">CONTAGEM (COUNT)</option>
+                <option value="MIN">MÍNIMO (MIN)</option>
+                <option value="MAX">MÁXIMO (MAX)</option>
+            </select>
+
+            <label for="med_nomeTabela">2. Nome da Tabela/Planilha (Ex: Fatos_Vendas):</label>
+            <input type="text" id="med_nomeTabela" placeholder="Ex: Fatos_Vendas">
+
+            <label for="med_nomeColuna">3. Nome da Coluna (Ex: Valor_Total):</label>
+            <input type="text" id="med_nomeColuna" placeholder="Ex: Valor_Total">
+
+            <div class="button-group">
+                <button class="generate-button" onclick="gerarCodigoMedidas()">Gerar Código DAX</button>
+                <button class="copy-button" onclick="copiarCodigo('med_codigoDax')">Copiar Código</button>
+            </div>
+
+            <div class="code-area">
+                <h2>Código DAX Gerado:</h2>
+                <textarea id="med_codigoDax" rows="5" readonly></textarea>
+            </div>
+        </div>
+
+        <!-- Conteúdo da Aba Produtividade -->
+        <div id="produtividade" class="tab-content">
+            <h2>Gerador de Fórmulas de Produtividade</h2>
+            <div class="instructions">
+                <p><strong>Instruções para Múltiplas Produtividades:</strong></p>
+                <ol>
+                    <li>**Pré-requisito:** Você precisa ter criado a tabela <code>d_Calendario</code> (primeira aba).</li>
+                    <li>**Preencha** o nome da sua Tabela de Produtividade.</li>
+                    <li>**Liste as Colunas de Quantidade** (uma por linha ou separadas por vírgula) que você deseja calcular.</li>
+                    <li>Clique em **"Gerar Fórmulas de Produtividade"**. O código DAX será gerado para todas as colunas de uma só vez.</li>
+                </ol>
+            </div>
+
+            <div class="input-group">
+                <div>
+                    <label for="prod_tabelaProd">1. Tabela de Produtividade (Ex: d_Produtividade):</label>
+                    <input type="text" id="prod_tabelaProd" value="d_Produtividade" placeholder="Ex: d_Produtividade">
+                </div>
+            </div>
+            
+            <label for="prod_colunasQuant">2. Colunas de Quantidade (Uma por linha ou separadas por vírgula):</label>
+            <textarea id="prod_colunasQuant" rows="5" placeholder="Ex:&#10;Veiculos_Removidos&#10;Pessoas_Abordadas&#10;Ocorrencias_Registradas"></textarea>
+
+            <div class="button-group">
+                <button class="generate-button" onclick="gerarCodigoProdutividade()">Gerar Fórmulas de Produtividade</button>
+                <button class="copy-button" onclick="copiarCodigo('prod_codigoDax')">Copiar Código</button>
+            </div>
+
+            <div class="code-area">
+                <h2>Código DAX Gerado (Múltiplas Medidas):</h2>
+                <textarea id="prod_codigoDax" rows="15" readonly></textarea>
+            </div>
+        </div>
+
+        <!-- Conteúdo da Aba Fórmulas da Aula (PASSO 02) -->
+        <div id="formulas" class="tab-content">
+            <h2>Gerador de Fórmulas DAX (POG e Metas)</h2>
+            <div class="instructions">
+                <p><strong>Instruções:</strong></p>
+                <ol>
+                    <li>**Pré-requisito:** Você precisa ter criado a tabela <code>d_Calendario</code> (primeira aba).</li>
+                    <li>**Preencha os 4 campos abaixo** com os nomes exatos das suas tabelas e colunas.</li>
+                </ol>
+            </div>
+
+            <div class="input-group">
+                <div>
+                    <label for="form_tabelaFatos">1. Tabela Principal de Fatos (Ex: f_Base_POG):</label>
+                    <input type="text" id="form_tabelaFatos" value="f_Base_POG" placeholder="Ex: f_Base_POG">
+                </div>
+                <div>
+                    <label for="form_tabelaMetas">2. Tabela de Metas (Ex: d_Metas):</label>
+                    <input type="text" id="form_tabelaMetas" value="d_Metas" placeholder="Ex: d_Metas">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <div>
+                    <label for="form_colunaMetas">3. Coluna de Metas (Ex: Meta):</label>
+                    <input type="text" id="form_colunaMetas" value="Meta" placeholder="Ex: Meta">
+                </div>
+                <div>
+                    <label for="form_tabelaProd_placeholder">4. Tabela de Produtividade (Apenas para referência):</label>
+                    <input type="text" id="form_tabelaProd_placeholder" value="d_Produtividade" disabled>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="generate-button" onclick="gerarCodigoFormulas()">Gerar Fórmulas (POG e Metas)</button>
+                <button class="copy-button" onclick="copiarCodigo('form_codigoDax')">Copiar Código</button>
+            </div>
+
+            <div class="code-area">
+                <h2>Código DAX Gerado (9 Medidas):</h2>
+                <textarea id="form_codigoDax" rows="25" readonly></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Funções de Controle de Abas ---
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+
+            tablinks = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+
+            // Gera o código inicial ou mensagem de instrução
+            if (tabName === 'calendario') {
+                gerarCodigoCalendario();
+            } else if (tabName === 'medidas') {
+                document.getElementById('med_codigoDax').value = "Preencha os campos acima e clique em 'Gerar Código DAX'.";
+            } else if (tabName === 'produtividade') {
+                // Não gera automaticamente para evitar erro com campos vazios
+                document.getElementById('prod_codigoDax').value = "Preencha a Tabela e as Colunas de Quantidade e clique em 'Gerar Fórmulas de Produtividade'.";
+            } else if (tabName === 'formulas') {
+                gerarCodigoFormulas();
+            }
+        }
+
+        // --- Funções de Geração de Código ---
+
+        function gerarCodigoCalendario() {
+            const nomeTabela = document.getElementById('cal_nomeTabela').value.trim();
+            const nomeColuna = document.getElementById('cal_nomeColuna').value.trim();
+            const codigoDaxElement = document.getElementById('cal_codigoDax');
+
+            if (!nomeTabela || !nomeColuna) {
+                codigoDaxElement.value = "Por favor, preencha o Nome da Tabela/Planilha e o Nome da Coluna de Data.";
+                return;
+            }
+
+            const daxTemplate = `d_Calendario =
+
+Var dataMin = MIN('${nomeTabela}'[${nomeColuna}])
+Var dataMax = MAX('${nomeTabela}'[${nomeColuna}])
+
+RETURN
+
+ADDCOLUMNS(
+    FILTER(
+        CALENDARAUTO(),
+        ([Date] >= dataMin &&
+        [Date] <= dataMax)
+    ),
+    "Ano", YEAR([Date]),
+    "Mês", MONTH([Date]),
+    "Mês Abrev", FORMAT([Date], "mmm"),
+    "Dia", DAY([Date]),
+    "Dia Semana ", IF(WEEKDAY([Date]) = 1, 8, WEEKDAY([Date])),
+    "Semana", FORMAT([Date], "ddd")
+)`;
+
+            codigoDaxElement.value = daxTemplate;
+        }
+
+        function gerarCodigoMedidas() {
+            const tipoMedida = document.getElementById('med_tipoMedida').value.trim();
+            const nomeTabela = document.getElementById('med_nomeTabela').value.trim();
+            const nomeColuna = document.getElementById('med_nomeColuna').value.trim();
+            const codigoDaxElement = document.getElementById('med_codigoDax');
+
+            if (!nomeTabela || !nomeColuna) {
+                codigoDaxElement.value = "Por favor, preencha o Nome da Tabela/Planilha e o Nome da Coluna.";
+                return;
+            }
+
+            const nomeMedidaMap = {
+                'SUM': 'Soma',
+                'AVERAGE': 'Media',
+                'COUNT': 'Contagem',
+                'MIN': 'Minimo',
+                'MAX': 'Maximo'
+            };
+
+            const nomeColunaLimpo = nomeColuna.replace(/[^a-zA-Z0-9_]/g, '');
+            const nomeMedida = `${nomeMedidaMap[tipoMedida]} ${nomeColunaLimpo}`;
+
+            const daxTemplate = `MEASURE Medidas[${nomeMedida}] = ${tipoMedida}('${nomeTabela}'[${nomeColuna}])`;
+
+            codigoDaxElement.value = daxTemplate;
+        }
+
+        function gerarCodigoProdutividade() {
+            const tabelaProd = document.getElementById('prod_tabelaProd').value.trim();
+            const colunasQuantInput = document.getElementById('prod_colunasQuant').value.trim();
+            const codigoDaxElement = document.getElementById('prod_codigoDax');
+
+            if (!tabelaProd || !colunasQuantInput) {
+                codigoDaxElement.value = "Por favor, preencha o Nome da Tabela de Produtividade e as Colunas de Quantidade.";
+                return;
+            }
+
+            // Processa as colunas: divide por nova linha ou vírgula, remove espaços e filtra vazios
+            const colunasQuant = colunasQuantInput
+                .split(/[\n,]+/)
+                .map(col => col.trim())
+                .filter(col => col.length > 0);
+
+            if (colunasQuant.length === 0) {
+                codigoDaxElement.value = "Por favor, insira pelo menos uma Coluna de Quantidade válida.";
+                return;
+            }
+
+            let daxFinal = '';
+
+            colunasQuant.forEach(colunaQuant => {
+                // Cria um nome base para as medidas de produtividade
+                const nomeBase = colunaQuant.replace(/[^a-zA-Z0-9_]/g, '');
+
+                const daxFormulas = `
+// -------------------------------------------------------------------
+// 1. MEDIDAS DE PRODUTIVIDADE PARA A COLUNA: ${colunaQuant}
+// -------------------------------------------------------------------
+
+MEASURE Medidas[${nomeBase}] = SUM('${tabelaProd}'[${colunaQuant}]) --ESSA É A SOMA DA PRODUTIVIDADE TOTAL, INCLUINDO OS DOIS ANOS--
+
+MEASURE Medidas[${nomeBase}_25] = CALCULATE([${nomeBase}],FILTER(d_Calendario, d_Calendario[Ano] = 2025)) --ESSA É A SOMA DA PRODUTIVIDADE APENAS DO ANO DE 2025--
+
+MEASURE Medidas[${nomeBase}_24_parcial] =
+VAR DATA_LIMITE = EDATE(CALCULATE(MAX(d_Calendario[Date]),ALL(d_Calendario)),-12)
+VAR RESULTADO = CALCULATE(
+   [${nomeBase}],
+    FILTER(
+        d_Calendario,
+        d_Calendario[Date] <= DATA_LIMITE &&
+        d_Calendario[Ano] = 2024
+    )
+)
+RETURN COALESCE(RESULTADO,0)  --ESSA É A SOMA PARCIAL DO ANO DE 2024 USADA PARA COMPARAR OS DOIS ANOS, POIS NÃO PODEMOS CONSIDERAR O ANO DE 2025 INTEIRO, JÁ QUE AINDA FALTA ALGUNS DIAS/MESES PARA ACABAR--
+
+MEASURE Medidas[Var_${nomeBase}_25_24] = (DIVIDE([${nomeBase}_25],[${nomeBase}_24_parcial])*100)-100 --ESSA Á A VARIAÇÃO ENTRE OS DOIS ANOS, SENHORES, ESTE *100 - 100, TRATASSE DE UMA FÓMULA MATEMÁTICA UNIVERSAL PARA CALCULAR PERCENTUAL DE VARIAÇÃO "SOMENTE" IGUAL DELTA E BASKARA, APENAS USE... ALGUÉM JÁ CRIOU A FÓRMULA--
+`;
+                daxFinal += daxFormulas.trim() + '\n\n';
+            });
+
+            codigoDaxElement.value = daxFinal.trim();
+        }
+
+        function gerarCodigoFormulas() {
+            const tabelaFatos = document.getElementById('form_tabelaFatos').value.trim();
+            const tabelaMetas = document.getElementById('form_tabelaMetas').value.trim();
+            const colunaMetas = document.getElementById('form_colunaMetas').value.trim();
+            const codigoDaxElement = document.getElementById('form_codigoDax');
+
+            if (!tabelaFatos || !tabelaMetas || !colunaMetas) {
+                codigoDaxElement.value = "Por favor, preencha todos os 3 campos obrigatórios para gerar as fórmulas (POG e Metas).";
+                return;
+            }
+
+            const daxFormulas = `
+// -------------------------------------------------------------------
+// 1. MEDIDAS DE POG (Ponto de Geração)
+// -------------------------------------------------------------------
+
+MEASURE Medidas[POG_25] =
+CALCULATE(COUNTROWS('${tabelaFatos}'),FILTER(d_Calendario, d_Calendario[Ano] = 2025))
+
+MEASURE Medidas[POG_24] =
+CALCULATE(COUNTROWS('${tabelaFatos}'),FILTER(d_Calendario, d_Calendario[Ano] = 2024))
+
+MEASURE Medidas[POG_24_parcial] =
+VAR DATA_LIMITE = EDATE(CALCULATE(MAX(d_Calendario[Date]),ALL(d_Calendario)),-12)
+VAR RESULTADO = CALCULATE(
+    COUNTROWS('${tabelaFatos}'),
+    FILTER(
+        d_Calendario,
+        d_Calendario[Date] <= DATA_LIMITE &&
+        d_Calendario[Ano] = 2024
+    )
+)
+RETURN COALESCE(RESULTADO,0)
+
+MEASURE Medidas[Var_25_24] = (DIVIDE([POG_25],[POG_24])*100)-100
+
+MEASURE Medidas[Var_25_24_parcial] = (DIVIDE([POG_25],[POG_24_parcial])*100)-100
+
+// -------------------------------------------------------------------
+// 2. MEDIDAS DE METAS
+// -------------------------------------------------------------------
+
+MEASURE Medidas[Metas_25] =
+VAR DATA_LIMITE = MAX(d_Calendario[Date])
+VAR MES_LIMITE = MONTH(DATA_LIMITE)
+VAR Dia_limite = DAY(DATA_LIMITE)
+VAR DIAS_DO_MES =
+    DAY(EOMONTH(DATA_LIMITE, 0) )
+VAR META_MESES_COMPLETOS =
+    CALCULATE(
+        SUM('${tabelaMetas}'[${colunaMetas}]),
+        FILTER(
+            ALL(d_Calendario),
+            d_Calendario[Mês] < MES_LIMITE
+        )
+    )
+
+VAR META_MES_ATUAL =
+    CALCULATE(
+        SUM('${tabelaMetas}'[${colunaMetas}]) * (Dia_limite / DIAS_DO_MES),
+        FILTER(
+            ALL(d_Calendario),
+            d_Calendario[Mês] = MES_LIMITE
+        )
+    )
+
+RETURN
+    META_MESES_COMPLETOS + META_MES_ATUAL
+
+MEASURE Medidas[Var_Meta] =
+(DIVIDE([POG_25],[Metas_25])*100)-100
+
+MEASURE Medidas[Desempenho] =
+DIVIDE([POG_25],[Metas_25])-0
+
+MEASURE Medidas[FREQ%] =
+VAR TotalPOG2025 =
+    CALCULATE(
+        [POG_25],
+        ALL('${tabelaFatos}')
+    )
+
+RETURN
+    DIVIDE([POG_25], TotalPOG2025, 0)
+`;
+
+            codigoDaxElement.value = daxFormulas.trim();
+        }
+
+        // --- Função de Cópia ---
+
+        function copiarCodigo(elementId) {
+            const codigoDaxElement = document.getElementById(elementId);
+            codigoDaxElement.select();
+            codigoDaxElement.setSelectionRange(0, 99999);
+
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(codigoDaxElement.value)
+                        .then(() => alert('Código DAX copiado para a área de transferência!'))
+                        .catch(err => {
+                            document.execCommand('copy');
+                            alert('Código DAX copiado para a área de transferência! (Método alternativo)');
+                        });
+                } else {
+                    document.execCommand('copy');
+                    alert('Código DAX copiado para a área de transferência!');
+                }
+            } catch (err) {
+                console.error('Erro ao tentar copiar: ', err);
+                alert('Não foi possível copiar o código. Por favor, selecione e copie manualmente.');
+            }
+        }
+
+        // Inicializa a aba "PASSO 01 : CRIAR TABELA CALENDÁRIO" ao carregar a página
+        document.addEventListener('DOMContentLoaded', () => {
+            // Verifica se a aba 'calendario' está ativa, se não, ativa a primeira aba
+            const activeTab = document.querySelector('.tab-button.active');
+            if (!activeTab) {
+                document.querySelector('.tab-button:nth-child(1)').click();
+            }
+        });
+    </script>
+
+</body>
+</html>
